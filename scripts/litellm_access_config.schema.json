@@ -1,0 +1,160 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LiteLLM Access Config",
+  "type": "object",
+  "required": ["providers", "projects", "users"],
+  "additionalProperties": false,
+  "properties": {
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "budget_duration": {
+          "type": "string",
+          "enum": ["daily", "weekly", "monthly", "yearly"]
+        }
+      }
+    },
+    "providers": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["litellm_prefix"],
+        "additionalProperties": false,
+        "properties": {
+          "litellm_prefix": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "projects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "budget_allocations", "members"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$",
+            "description": "Stable lowercase identifier used to construct LiteLLM team IDs."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "budget_allocations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["provider", "budget_limit_usd"],
+              "additionalProperties": false,
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Must match a key defined in top-level providers."
+                },
+                "budget_limit_usd": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "budget_duration": {
+                  "type": "string",
+                  "enum": ["daily", "weekly", "monthly", "yearly"]
+                },
+                "tpm_limit": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "rpm_limit": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "allowed_models": {
+                  "oneOf": [
+                    {
+                      "type": "null",
+                      "description": "null means all models for this provider are permitted."
+                    },
+                    {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Bare model name without provider prefix."
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "user_budget_overrides": {
+            "type": "object",
+            "description": "Reserved for future per-user sub-limits within this project.",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["budget_limit_usd"],
+              "additionalProperties": false,
+              "properties": {
+                "budget_limit_usd": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              }
+            }
+          },
+          "members": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "users": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "email", "projects"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "projects": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}
