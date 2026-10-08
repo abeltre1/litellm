@@ -92,7 +92,7 @@ CA_BUNDLE=~/.config/certs/ca-bundle.pem ./scan.sh
 
 `CA_BUNDLE` is optional and may be a relative path, which is resolved against the directory you run the script from. When set, the script builds with the same mount and build arguments as above, adding `,Z` only when Podman reports SELinux as enabled, and gives the bundle to the scanner containers so they can download their databases through a TLS-intercepting proxy. Without it the build uses the image's own CA bundle. The build needs to reach `packages.wolfi.dev` (or your mirror) and the scanners need their database hosts
 
-The script builds the image, prints the installed versions of every package the scan flagged, starts the proxy with networking disabled and waits for `/health/liveliness`, round-trips audio through `soundfile`, then exports the image with `podman save` and scans it. It fails unless grype v0.120.1 with a freshly updated database reports zero findings beyond the justified ones, at any severity including Unknown, and Trivy 0.75.0 does the same. Both scanners are pinned by digest and run in containers, so nothing needs to be installed and no Podman socket is needed. Reports land in `reports/`, which is git-ignored and excluded from the build context because the export is about 2 GB
+The script builds the image, prints the installed versions of every package the scan flagged, starts the proxy with networking disabled and waits for `/health/liveliness`, round-trips audio through `soundfile`, then exports the image with `podman save` and scans it. It fails unless grype, with a freshly updated database, reports zero findings beyond the justified ones, at any severity including Unknown, and Trivy 0.75.0 does the same. grype is the copy installed on your machine when one is on `PATH` (0.115.0 or newer, so that `--vex` and the ignore rules work), which avoids pulling a scanner image and re-downloading its database on every run. Without one, the script says so and falls back to a grype container pinned by digest. On a Mac, a locally installed grype trusts the system keychain for its own downloads, so it needs no CA bundle. Trivy is pinned by digest and runs in a container, so no Podman socket is needed. Reports land in `reports/`, which is git-ignored and excluded from the build context because the export is about 2 GB
 
 For a multi-arch image use `podman build --platform linux/amd64,linux/arm64 --manifest localhost/litellm-non_root:v1.104.2-patched .` (needs `qemu-user-static` for the foreign architecture)
 
@@ -100,7 +100,7 @@ On an Apple Silicon Mac, Podman builds an arm64 image by default. That image kee
 
 ## Notes on the scanners
 
-The baseline grype run used grype 0.115.0 with a database it reported as 13 weeks old, which is why OpenSSL and alsa-lib showed no fixed version. `scan.sh` updates the database and uses the current grype release
+The baseline grype run used grype 0.115.0 with a database it reported as 13 weeks old, which is why OpenSSL and alsa-lib showed no fixed version. `scan.sh` updates the database before every scan
 
 grype's `--fail-on` ranks Unknown below Negligible, so `--fail-on negligible` would let the 16 Unknown-severity rows through. The gate in `scan.sh` counts every match in the JSON report instead
 
@@ -114,4 +114,4 @@ Neither scanner sees the libsndfile 1.2.0 bundled inside the `soundfile` wheel, 
 
 Run on 2026-10-08 with Podman 4.9.3. The original Dockerfile was built and its package set diffed against the stock image. The new Dockerfile was built: the `libsndfile` removal ran, the pins were removed, and the upgrade step failed closed because the build environment's egress policy blocks `packages.wolfi.dev`. A stand-in image without the upgrade passed the liveness and `soundfile` smoke test after the removal, its archive scanned under Trivy with the VEX accepted, and the Trivy gate correctly failed on the stand-in's unpatched glibc. The `.grype.yaml` rules were loaded and validated by grype v0.120.1. The linkage evidence was gathered on both architectures and the runtime evidence on amd64
 
-Not verified there: the upgraded packages themselves and any grype scan, because `packages.wolfi.dev` and grype's database host are blocked in that environment. Run `scan.sh` before relying on the image
+The patched build was then run on an Apple Silicon Mac with Podman and a corporate CA bundle. apk upgraded glibc 2.44-r6 to r8, libcrypto3 and libssl3 3.6.4-r7 to 3.6.5-r1, plus ca-certificates-bundle, zlib, and apk-tools, and the smoke test passed on the result. The grype and Trivy gates against that image had not yet been reported when this was written. Run `scan.sh` before relying on the image

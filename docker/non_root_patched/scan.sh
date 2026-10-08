@@ -36,9 +36,12 @@ trivy() {
   scanner -v litellm-trivy-cache:/root/.cache/trivy "$TRIVY_IMAGE" "$@"
 }
 
-grype() {
-  scanner -v litellm-grype-cache:/cache -e GRYPE_DB_CACHE_DIR=/cache "$GRYPE_IMAGE" "$@"
-}
+if ! command -v grype >/dev/null; then
+  echo "grype is not on PATH; using the pinned grype container instead"
+  grype() {
+    scanner -v litellm-grype-cache:/cache -e GRYPE_DB_CACHE_DIR=/cache "$GRYPE_IMAGE" "$@"
+  }
+fi
 
 smoke_test() {
   local cid
@@ -82,6 +85,7 @@ rm -f "$PATCHED_ARCHIVE"
 podman save --format docker-archive -o "$PATCHED_ARCHIVE" "$PATCHED_IMAGE"
 
 echo "== grype: stock image, raw findings (informational)"
+grype version | grep -E '^(Version|Built):'
 grype db update
 grype "registry:$STOCK_IMAGE" -o table --file "$REPORTS/grype-stock.txt"
 cat "$REPORTS/grype-stock.txt"
