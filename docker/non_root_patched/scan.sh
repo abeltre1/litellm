@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+CA_BUNDLE="${CA_BUNDLE:-}"
+if [ -n "$CA_BUNDLE" ]; then
+  if [ ! -f "$CA_BUNDLE" ] || [ ! -r "$CA_BUNDLE" ]; then
+    echo "CA_BUNDLE is not a readable file: $CA_BUNDLE" >&2
+    exit 1
+  fi
+  CA_BUNDLE=$(realpath "$CA_BUNDLE")
+fi
+
 cd "$(dirname "$0")"
 
 STOCK_IMAGE="docker.io/litellm/litellm-non_root:v1.104.2"
@@ -10,7 +19,6 @@ GRYPE_IMAGE="docker.io/anchore/grype@sha256:e4a44ef45d285b829ce6efe2642980329661
 VEX="litellm-non_root-v1.104.2.openvex.json"
 REPORTS="reports"
 PATCHED_ARCHIVE="$REPORTS/patched.docker-archive.tar"
-CA_BUNDLE="${CA_BUNDLE:-}"
 
 build_ca_args=(--build-arg BUILD_SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt --build-arg BUILD_NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt)
 scanner_ca_args=()

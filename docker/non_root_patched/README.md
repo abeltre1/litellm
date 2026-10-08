@@ -90,7 +90,7 @@ To build, smoke test, and scan in one go
 CA_BUNDLE=~/.config/certs/ca-bundle.pem ./scan.sh
 ```
 
-`CA_BUNDLE` is optional. When set, the script builds with the same mount and build arguments as above, adding `,Z` only when Podman reports SELinux as enabled, and gives the bundle to the scanner containers so they can download their databases through a TLS-intercepting proxy. Without it the build uses the image's own CA bundle. The build needs to reach `packages.wolfi.dev` (or your mirror) and the scanners need their database hosts
+`CA_BUNDLE` is optional and may be a relative path, which is resolved against the directory you run the script from. When set, the script builds with the same mount and build arguments as above, adding `,Z` only when Podman reports SELinux as enabled, and gives the bundle to the scanner containers so they can download their databases through a TLS-intercepting proxy. Without it the build uses the image's own CA bundle. The build needs to reach `packages.wolfi.dev` (or your mirror) and the scanners need their database hosts
 
 The script builds the image, prints the installed versions of every package the scan flagged, starts the proxy with networking disabled and waits for `/health/liveliness`, round-trips audio through `soundfile`, then exports the image with `podman save` and scans it. It fails unless grype v0.120.1 with a freshly updated database reports zero findings beyond the justified ones, at any severity including Unknown, and Trivy 0.75.0 does the same. Both scanners are pinned by digest and run in containers, so nothing needs to be installed and no Podman socket is needed. Reports land in `reports/`, which is git-ignored and excluded from the build context because the export is about 2 GB
 
