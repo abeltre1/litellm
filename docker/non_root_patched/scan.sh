@@ -7,7 +7,7 @@ if [ -n "$CA_BUNDLE" ]; then
     echo "CA_BUNDLE is not a readable file: $CA_BUNDLE" >&2
     exit 1
   fi
-  CA_BUNDLE=$(realpath "$CA_BUNDLE")
+  CA_BUNDLE="$(cd "$(dirname "$CA_BUNDLE")" && pwd -P)/$(basename "$CA_BUNDLE")"
 fi
 
 cd "$(dirname "$0")"
@@ -29,7 +29,7 @@ if [ -n "$CA_BUNDLE" ]; then
 fi
 
 scanner() {
-  podman run --rm --security-opt label=disable "${scanner_ca_args[@]}" -v "$PWD:/work" -w /work "$@"
+  podman run --rm --security-opt label=disable ${scanner_ca_args[@]+"${scanner_ca_args[@]}"} -v "$PWD:/work" -w /work "$@"
 }
 
 trivy() {
@@ -90,7 +90,9 @@ echo "== grype gate: patched image must have zero findings outside the justified
 grype "docker-archive:$PATCHED_ARCHIVE" -c .grype.yaml --vex "$VEX" -o json --file "$REPORTS/grype-patched.json"
 grype "docker-archive:$PATCHED_ARCHIVE" -c .grype.yaml --vex "$VEX" --show-suppressed -o table --file "$REPORTS/grype-patched.txt"
 cat "$REPORTS/grype-patched.txt"
-python3 -c 'import json, sys; m = json.load(open(sys.argv[1]))["matches"]; print(f"{len(m)} unjustified grype findings, any severity including Unknown"); sys.exit(1 if m else 0)' "$REPORTS/grype-patched.json"
+podman run --rm --security-opt label=disable -v "$PWD/$REPORTS:/reports:ro" --entrypoint python "$PATCHED_IMAGE" \
+  -c 'import json, sys; m = json.load(open(sys.argv[1]))["matches"]; print(f"{len(m)} unjustified grype findings, any severity including Unknown"); sys.exit(1 if m else 0)' \
+  /reports/grype-patched.json
 
 echo "== trivy gate: patched image must have zero findings outside the justified ones"
 trivy image --input "$PATCHED_ARCHIVE" --scanners vuln --vex "$VEX" --show-suppressed --exit-code 1 --format table -o "$REPORTS/trivy-patched.txt"

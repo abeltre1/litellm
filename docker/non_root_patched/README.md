@@ -96,6 +96,8 @@ The script builds the image, prints the installed versions of every package the 
 
 For a multi-arch image use `podman build --platform linux/amd64,linux/arm64 --manifest localhost/litellm-non_root:v1.104.2-patched .` (needs `qemu-user-static` for the foreign architecture)
 
+On an Apple Silicon Mac, Podman builds an arm64 image by default. That image keeps `libsndfile` and `alsa-lib`, so its grype gate relies on the three alsa-lib statements in the VEX and `.grype.yaml`. If your servers are x86, build and scan the amd64 image instead. The script itself runs under the bash 3.2 that ships with macOS and needs nothing on the host beyond Podman
+
 ## Notes on the scanners
 
 The baseline grype run used grype 0.115.0 with a database it reported as 13 weeks old, which is why OpenSSL and alsa-lib showed no fixed version. `scan.sh` updates the database and uses the current grype release
