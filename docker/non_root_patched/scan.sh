@@ -15,7 +15,8 @@ CA_BUNDLE="${CA_BUNDLE:-}"
 build_ca_args=(--build-arg BUILD_SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt --build-arg BUILD_NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt)
 scanner_ca_args=()
 if [ -n "$CA_BUNDLE" ]; then
-  build_ca_args=(-v "$CA_BUNDLE:/ca-bundle.pem:ro")
+  selinux_relabel=$([ "$(podman info --format '{{.Host.Security.SELinuxEnabled}}')" = "true" ] && echo ",Z" || true)
+  build_ca_args=(-v "$CA_BUNDLE:/ca-bundle.pem:ro$selinux_relabel" --build-arg BUILD_SSL_CERT_FILE=/ca-bundle.pem --build-arg BUILD_NODE_EXTRA_CA_CERTS=/ca-bundle.pem)
   scanner_ca_args=(-v "$CA_BUNDLE:/ca-bundle.pem:ro" -e SSL_CERT_FILE=/ca-bundle.pem)
 fi
 

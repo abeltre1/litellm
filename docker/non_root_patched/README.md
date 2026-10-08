@@ -72,11 +72,25 @@ Keep running the proxy as the only workload in the container under uid 65534, do
 
 ## Running it
 
+To build the image by hand with your own CA bundle, mount it at `/ca-bundle.pem` and point both build arguments at it
+
 ```
-CA_BUNDLE=/path/to/your/ca-bundle.pem ./scan.sh
+podman build \
+    -v ~/.config/certs/ca-bundle.pem:/ca-bundle.pem:ro,Z \
+    --build-arg BUILD_SSL_CERT_FILE=/ca-bundle.pem \
+    --build-arg BUILD_NODE_EXTRA_CA_CERTS=/ca-bundle.pem \
+    -t litellm-rebuild .
 ```
 
-`CA_BUNDLE` is optional. When set it is mounted at `/ca-bundle.pem` for the build, as your Dockerfile expects, and given to the scanner containers so they can download their databases through a TLS-intercepting proxy. Without it the build uses the image's own CA bundle. The build needs to reach `packages.wolfi.dev` (or your mirror) and the scanners need their database hosts
+The `,Z` relabels the file so the build container can read it on an SELinux host. Drop it where SELinux is disabled, because Podman 4.9 then rejects the mount with `bind mounts cannot have any filesystem-specific options applied`. The bundle replaces the system one for the upgrade step, so it must also contain the public roots for any TLS that your proxy does not intercept
+
+To build, smoke test, and scan in one go
+
+```
+CA_BUNDLE=~/.config/certs/ca-bundle.pem ./scan.sh
+```
+
+`CA_BUNDLE` is optional. When set, the script builds with the same mount and build arguments as above, adding `,Z` only when Podman reports SELinux as enabled, and gives the bundle to the scanner containers so they can download their databases through a TLS-intercepting proxy. Without it the build uses the image's own CA bundle. The build needs to reach `packages.wolfi.dev` (or your mirror) and the scanners need their database hosts
 
 The script builds the image, prints the installed versions of every package the scan flagged, starts the proxy with networking disabled and waits for `/health/liveliness`, round-trips audio through `soundfile`, then exports the image with `podman save` and scans it. It fails unless grype v0.120.1 with a freshly updated database reports zero findings beyond the justified ones, at any severity including Unknown, and Trivy 0.75.0 does the same. Both scanners are pinned by digest and run in containers, so nothing needs to be installed and no Podman socket is needed. Reports land in `reports/`, which is git-ignored and excluded from the build context because the export is about 2 GB
 
