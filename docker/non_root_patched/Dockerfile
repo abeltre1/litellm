@@ -1,6 +1,4 @@
-# syntax=docker/dockerfile:1.7
-
-ARG BASE_IMAGE=litellm/litellm-non_root:v1.104.2@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027
+ARG BASE_IMAGE=docker.io/litellm/litellm-non_root@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027
 
 FROM ${BASE_IMAGE}
 

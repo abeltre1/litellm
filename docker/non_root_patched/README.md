@@ -5,7 +5,7 @@ This directory covers `litellm/litellm-non_root:v1.104.2`, the latest upstream r
 | File | Purpose |
 | --- | --- |
 | `Dockerfile` | Patched image that upgrades glibc to the fixed release |
-| `scan.sh` | Builds the patched image, smoke tests it, and gates on Trivy and Grype |
+| `scan.sh` | Builds the patched image with Podman, smoke tests it, and gates on Trivy and Grype |
 | `litellm-non_root-v1.104.2.openvex.json` | OpenVEX justification for every finding in the stock image |
 | `evidence/` | Trivy 0.75.0 reports for the stock image on both architectures, raw and with the VEX applied |
 
@@ -26,9 +26,9 @@ Trivy 0.75.0 (vulnerability DB pulled 2026-10-08) reports no critical, high, or 
 
 A plain `apk upgrade` on top of the stock image does nothing, for two reasons. The image's only configured repository is `https://apk.cgr.dev/chainguard`, which requires Chainguard credentials, and `/etc/apk/world` pins every glibc subpackage to `=2.44-r6`, so apk will not move them even with repository access. The Dockerfile names the Wolfi repository for this one install (the image already trusts `wolfi-signing.rsa.pub`) and replaces the exact pins with `>=2.44-r8` constraints. If the fixed packages cannot be fetched, the build fails rather than producing an unpatched image
 
-If your network mirrors Wolfi internally, point the build at the mirror with `--build-arg APK_REPOSITORY=https://your-mirror/os`. For a multi-arch image use `docker buildx build --platform linux/amd64,linux/arm64`
+If your network mirrors Wolfi internally, point the build at the mirror with `--build-arg APK_REPOSITORY=https://your-mirror/os`. For a multi-arch image use `podman build --platform linux/amd64,linux/arm64 --manifest localhost/litellm-non_root:v1.104.2-patched .`, which needs `qemu-user-static` on the host for the foreign architecture
 
-Run `./scan.sh` on a machine with Docker and registry access. It builds the image, prints the installed glibc versions, starts the proxy with networking disabled and waits for `/health/liveliness`, then fails unless the patched image has zero findings under both Trivy 0.75.0 and Grype v0.120.1 and the stock image has zero unjustified findings under Trivy with the VEX applied. Reports land in `reports/`. Both scanners are pinned by digest
+Run `./scan.sh` with Podman (rootless is fine) on a machine with registry access. It builds the image, prints the installed glibc versions, starts the proxy with networking disabled and waits for `/health/liveliness`, then fails unless the patched image has zero findings under both Trivy 0.75.0 and Grype v0.120.1 and the stock image has zero unjustified findings under Trivy with the VEX applied. Both scanners are pinned by digest and run as containers, so nothing needs installing and no Podman socket is needed: the scanners pull the stock image straight from the registry by digest, and the patched image is exported with `podman save` to `reports/patched.docker-archive.tar` (about 2 GB, git-ignored and excluded from the build context). Scanner containers run with `--security-opt label=disable` so they can read the mounted directory on SELinux hosts. Reports land in `reports/`
 
 ## Justification: OpenVEX
 
@@ -37,7 +37,8 @@ If you deploy the stock image instead, `litellm-non_root-v1.104.2.openvex.json` 
 The two ld.so CVEs (86805 and 95818) are only reachable when the loader runs a program with AT_SECURE set, which happens for setuid, setgid, or file-capability binaries. The image contains none on either architecture, and the container runs as uid 65534
 
 ```
-docker run --rm --user 0 --network none --entrypoint sh litellm/litellm-non_root:v1.104.2 \
+podman run --rm --user 0 --network none --entrypoint sh \
+  docker.io/litellm/litellm-non_root@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027 \
   -c 'find / -xdev \( -perm -4000 -o -perm -2000 \) -type f | wc -l'
 0
 ```
@@ -45,14 +46,17 @@ docker run --rm --user 0 --network none --entrypoint sh litellm/litellm-non_root
 CVE-2026-89092 lives in the nscd daemon, which is not installed: there is no binary, no `/etc/nscd.conf`, and no socket
 
 ```
-docker run --rm --user 0 --network none --entrypoint sh litellm/litellm-non_root:v1.104.2 -c 'find / -xdev -name "nscd*" | wc -l'
+podman run --rm --user 0 --network none --entrypoint sh \
+  docker.io/litellm/litellm-non_root@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027 \
+  -c 'find / -xdev -name "nscd*" | wc -l'
 0
 ```
 
 CVE-2026-8674 is triggered by the content of `/etc/resolv.conf` or the `LOCALDOMAIN` environment variable. The image does not set `LOCALDOMAIN`, and `resolv.conf` is bind-mounted by the container runtime from the platform's DNS configuration, so only the operator controls it. API callers and network peers cannot. The worst case under operator misconfiguration is a process abort
 
 ```
-docker run --rm --entrypoint sh litellm/litellm-non_root:v1.104.2 -c 'grep " /etc/resolv.conf " /proc/mounts'
+podman run --rm --entrypoint sh docker.io/litellm/litellm-non_root@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027 \
+  -c 'grep " /etc/resolv.conf " /proc/mounts'
 /dev/vda /etc/resolv.conf ext4 rw,relatime,... 0 0
 ```
 
@@ -61,14 +65,18 @@ These claims hold as long as the deployment keeps the conditions they depend on.
 Apply the VEX with either scanner
 
 ```
-trivy image --vex litellm-non_root-v1.104.2.openvex.json --show-suppressed --exit-code 1 litellm/litellm-non_root:v1.104.2
-grype docker:litellm/litellm-non_root:v1.104.2 --vex litellm-non_root-v1.104.2.openvex.json --show-suppressed
+trivy image --vex litellm-non_root-v1.104.2.openvex.json --show-suppressed --exit-code 1 docker.io/litellm/litellm-non_root@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027
+grype registry:docker.io/litellm/litellm-non_root@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027 --vex litellm-non_root-v1.104.2.openvex.json --show-suppressed
 ```
 
 With Trivy this reports 0 findings on amd64 and arm64 and lists all 16 as suppressed with their justifications; the output is in `evidence/trivy-stock-vex-amd64.txt` and `evidence/trivy-stock-vex-arm64.txt`
 
+The VEX names the image by digest, so the scanner has to know the digest. Scanning from the registry or from local Podman storage (where `podman image inspect` lists the digests under `RepoDigests`) works. Scanning a `podman save` archive does not, because the archive does not carry the registry digest and all 16 findings show as active. That is deliberate: matching on the glibc package alone would claim every image with this glibc is unaffected, while the evidence above only holds for these digests
+
 ## What was and was not verified
 
-The stock image scans, the in-image evidence on amd64 (by running it) and arm64 (from its exported filesystem), the Trivy VEX gate on both architectures, the offline liveness check on the stock image, and the Dockerfile lint were all run on 2026-10-08. The patched build could not be completed in the environment where this was prepared because its egress policy blocks `packages.wolfi.dev` and `apk.cgr.dev`; the build reached the `apk add` step and failed there as designed. Grype could not be run there either because `grype.anchore.io` is blocked. `scan.sh` covers both, so run it before relying on the patched image
+The following were run on 2026-10-08: the stock image scans, the in-image evidence on amd64 (by running it) and arm64 (from its exported filesystem), the Trivy VEX gate on both architectures, the offline liveness check on the stock image, and the evidence commands above. `scan.sh` was also run under Podman 4.9.3. The build parsed under Buildah and stopped at the `apk add` step as designed, because the egress policy of the environment where this was prepared blocks `packages.wolfi.dev`. Every later step was then exercised with the stock image standing in for the patched one. The smoke test passed, the `podman save` export scanned with all 199 Python packages detected, and the zero-findings gate correctly failed on the stand-in's 16 glibc findings. The VEX gate against the registry passed
+
+Two things were not run there. The patched image itself was never built, and Grype was never run, because `grype.anchore.io` is also blocked. Run `scan.sh` before relying on the patched image
 
 Vulnerability databases change daily, so new findings can appear against the same digest. Re-run `scan.sh` on a schedule, and re-review the VEX whenever the base digest changes
