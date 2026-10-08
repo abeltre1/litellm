@@ -12,7 +12,6 @@ fi
 
 cd "$(dirname "$0")"
 
-STOCK_IMAGE="docker.io/litellm/litellm-non_root:v1.104.2"
 PATCHED_IMAGE="${PATCHED_IMAGE:-localhost/litellm-non_root:v1.104.2-patched}"
 TRIVY_IMAGE="docker.io/aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa"
 GRYPE_IMAGE="docker.io/anchore/grype@sha256:e4a44ef45d285b829ce6efe2642980329661bd2d18eab5fc539138d4adaebbbe"
@@ -84,13 +83,9 @@ echo "== export $PATCHED_IMAGE for scanning"
 rm -f "$PATCHED_ARCHIVE"
 podman save --format docker-archive -o "$PATCHED_ARCHIVE" "$PATCHED_IMAGE"
 
-echo "== grype: stock image, raw findings (informational)"
+echo "== grype gate: patched image must have zero findings outside the justified ones"
 grype version | grep -E '^(Version|Built):'
 grype db update
-grype "registry:$STOCK_IMAGE" -o table --file "$REPORTS/grype-stock.txt"
-cat "$REPORTS/grype-stock.txt"
-
-echo "== grype gate: patched image must have zero findings outside the justified ones"
 grype "docker-archive:$PATCHED_ARCHIVE" -c .grype.yaml --vex "$VEX" -o json --file "$REPORTS/grype-patched.json"
 grype "docker-archive:$PATCHED_ARCHIVE" -c .grype.yaml --vex "$VEX" --show-suppressed -o table --file "$REPORTS/grype-patched.txt"
 cat "$REPORTS/grype-patched.txt"
