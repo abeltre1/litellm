@@ -1,0 +1,259 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "urn:uuid:7198d143-b96d-44a5-9049-17415cca1fe6",
+  "author": "abeltre1",
+  "role": "Deployer security review",
+  "timestamp": "2026-10-08T19:45:00Z",
+  "version": 1,
+  "tooling": "Evidence gathered with trivy 0.75.0 (aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa) and in-image inspection; see README.md",
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2026-86805",
+        "description": "glibc ld.so TOCTOU when expanding $ORIGIN in DT_RPATH for setuid/setgid (AT_SECURE) programs"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/litellm-non_root@sha256%3Ae8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
+            }
+          ]
+        },
+        {
+          "@id": "pkg:oci/litellm-non_root@sha256%3A96f7723f804efd652aece0e64ff37e5fa26f6f4366c1ff083a5957dc732acd4f?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
+            }
+          ]
+        },
+        {
+          "@id": "pkg:oci/litellm-non_root@sha256%3Ab1f2d6d3d1ba0c374cf4b9ee97d97d45a329a5f3bcb3f964751c090fb6570324?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw is only reachable when ld.so loads a program with AT_SECURE set, which happens for setuid/setgid or file-capability binaries. The image contains zero setuid, setgid, or file-capability binaries on both amd64 and arm64, and the container runs as uid 65534, so no AT_SECURE exec can occur from image content. Exploitation additionally requires fs.protected_hardlinks to be disabled on the host"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2026-95818",
+        "description": "glibc ld.so stack buffer overflow for setuid/setgid (AT_SECURE) programs whose DT_RPATH/DT_RUNPATH begins with $ORIGIN"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/litellm-non_root@sha256%3Ae8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
+            }
+          ]
+        },
+        {
+          "@id": "pkg:oci/litellm-non_root@sha256%3A96f7723f804efd652aece0e64ff37e5fa26f6f4366c1ff083a5957dc732acd4f?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
+            }
+          ]
+        },
+        {
+          "@id": "pkg:oci/litellm-non_root@sha256%3Ab1f2d6d3d1ba0c374cf4b9ee97d97d45a329a5f3bcb3f964751c090fb6570324?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The overflow is only reachable when ld.so processes $ORIGIN for an AT_SECURE (setuid, setgid, or file-capability) program. The image contains zero such binaries on both amd64 and arm64 and runs as uid 65534, so the vulnerable loader path is never executed for image content"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2026-89092",
+        "description": "glibc nscd stack overflow on oversized DNS responses"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/litellm-non_root@sha256%3Ae8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
+            }
+          ]
+        },
+        {
+          "@id": "pkg:oci/litellm-non_root@sha256%3A96f7723f804efd652aece0e64ff37e5fa26f6f4366c1ff083a5957dc732acd4f?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
+            }
+          ]
+        },
+        {
+          "@id": "pkg:oci/litellm-non_root@sha256%3Ab1f2d6d3d1ba0c374cf4b9ee97d97d45a329a5f3bcb3f964751c090fb6570324?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "The vulnerable code is in the nscd daemon. nscd is not installed in the image on either amd64 or arm64: there is no nscd binary, no /etc/nscd.conf, and no nscd socket, so the vulnerable component cannot run"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2026-8674",
+        "description": "glibc DNS stub resolver assertion failure (process abort) from an overlong search domain in /etc/resolv.conf or LOCALDOMAIN"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/litellm-non_root@sha256%3Ae8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
+            }
+          ]
+        },
+        {
+          "@id": "pkg:oci/litellm-non_root@sha256%3A96f7723f804efd652aece0e64ff37e5fa26f6f4366c1ff083a5957dc732acd4f?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
+            }
+          ]
+        },
+        {
+          "@id": "pkg:oci/litellm-non_root@sha256%3Ab1f2d6d3d1ba0c374cf4b9ee97d97d45a329a5f3bcb3f964751c090fb6570324?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
+            },
+            {
+              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
+      "impact_statement": "The trigger is the search list in /etc/resolv.conf or the LOCALDOMAIN environment variable. The image does not set LOCALDOMAIN, and /etc/resolv.conf is bind-mounted by the container runtime at start from the platform's DNS configuration, so only the platform operator controls it. Neither LLM API callers nor network peers can influence it. The worst-case impact under operator misconfiguration is a process abort (availability only)"
+    }
+  ]
+}
