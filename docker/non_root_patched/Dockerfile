@@ -1,15 +1,17 @@
-ARG BASE_IMAGE=docker.io/litellm/litellm-non_root@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027
-
-FROM ${BASE_IMAGE}
-
-ARG APK_REPOSITORY=https://packages.wolfi.dev/os
+FROM litellm/litellm-non_root:v1.104.2
 
 USER root
 
-RUN apk add --no-cache --repositories-file /dev/null --repository "${APK_REPOSITORY}" \
-      "glibc-2.44>=2.44-r8" \
-      "glibc-2.44-locale-posix>=2.44-r8" \
-      "ld-linux-2.44>=2.44-r8" \
-      "libcrypt1-2.44>=2.44-r8"
+ARG BUILD_SSL_CERT_FILE=/ca-bundle.pem
+ARG BUILD_NODE_EXTRA_CA_CERTS=/ca-bundle.pem
+ARG APK_REPOSITORY=https://packages.wolfi.dev/os
 
-USER 65534
+RUN if [ -e "/app/.venv/lib/python3.13/site-packages/_soundfile_data/libsndfile_$(uname -m).so" ]; then \
+      apk del --no-cache libsndfile; \
+    fi && \
+    sed -i -E 's/^([^=<>~]+)[=<>~].*$/\1/' /etc/apk/world && \
+    SSL_CERT_FILE="${BUILD_SSL_CERT_FILE}" \
+    NODE_EXTRA_CA_CERTS="${BUILD_NODE_EXTRA_CA_CERTS}" \
+    apk upgrade --no-cache --repositories-file /dev/null --repository "${APK_REPOSITORY}"
+
+USER nobody

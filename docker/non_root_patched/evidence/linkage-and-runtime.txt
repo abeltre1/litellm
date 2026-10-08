@@ -1,0 +1,53 @@
+# Linkage and runtime evidence for litellm/litellm-non_root:v1.104.2
+# amd64 manifest sha256:96f7723f804efd652aece0e64ff37e5fa26f6f4366c1ff083a5957dc732acd4f
+# arm64 manifest sha256:b1f2d6d3d1ba0c374cf4b9ee97d97d45a329a5f3bcb3f964751c090fb6570324
+# Generated 2026-10-08 with readelf (NEEDED entries only) on each image's exported filesystem, and /proc/<pid>/maps in a running container
+
+## amd64: ELF files that link (NEEDED) libssl.so.3, libcrypto.so.3, or libasound.so.2
+/opt/prisma/.cache/prisma/master/ac9d7041ed77bcc8a8dbd2ab6616b39013829574/debian-openssl-3.0.x/query-engine -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/.cache/prisma/master/ac9d7041ed77bcc8a8dbd2ab6616b39013829574/debian-openssl-3.0.x/schema-engine -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/.cache/prisma/master/ac9d7041ed77bcc8a8dbd2ab6616b39013829574/linux-musl-openssl-3.0.x/query-engine -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/binaries/node_modules/@prisma/engines/query-engine-debian-openssl-3.0.x -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/binaries/node_modules/@prisma/engines/schema-engine-debian-openssl-3.0.x -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/binaries/node_modules/prisma/query-engine-debian-openssl-3.0.x -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/binaries/node_modules/prisma/query-engine-linux-musl-openssl-3.0.x -> libcrypto.so.3 libssl.so.3 
+/usr/bin/apk -> libcrypto.so.3 
+/usr/bin/aserver -> libasound.so.2 
+/usr/bin/sndfile-play -> libasound.so.2 
+/usr/lib/libapk.so.2.14.10 -> libcrypto.so.3 libssl.so.3 
+/usr/lib/libatopology.so.2.0.0 -> libasound.so.2 
+/usr/lib/libssl.so.3 -> libcrypto.so.3 
+
+## amd64: NEEDED entries of /usr/lib/libsndfile.so.1
+libm.so.6 libogg.so.0 libvorbisenc.so.2 libFLAC.so.14 libopus.so.0 libvorbis.so.0 libc.so.6 
+
+## amd64: library bundled by the soundfile wheel
+/app/.venv/lib/python3.13/site-packages/_soundfile_data/libsndfile_x86_64.so
+
+## arm64: ELF files that link (NEEDED) libssl.so.3, libcrypto.so.3, or libasound.so.2
+/opt/prisma/.cache/prisma/master/ac9d7041ed77bcc8a8dbd2ab6616b39013829574/debian-openssl-3.0.x/query-engine -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/.cache/prisma/master/ac9d7041ed77bcc8a8dbd2ab6616b39013829574/linux-arm64-openssl-3.0.x/query-engine -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/.cache/prisma/master/ac9d7041ed77bcc8a8dbd2ab6616b39013829574/linux-arm64-openssl-3.0.x/schema-engine -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/.cache/prisma/master/ac9d7041ed77bcc8a8dbd2ab6616b39013829574/linux-musl-openssl-3.0.x/query-engine -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/binaries/node_modules/@prisma/engines/query-engine-linux-arm64-openssl-3.0.x -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/binaries/node_modules/@prisma/engines/schema-engine-linux-arm64-openssl-3.0.x -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/binaries/node_modules/prisma/query-engine-debian-openssl-3.0.x -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/binaries/node_modules/prisma/query-engine-linux-arm64-openssl-3.0.x -> libcrypto.so.3 libssl.so.3 
+/opt/prisma/binaries/node_modules/prisma/query-engine-linux-musl-openssl-3.0.x -> libcrypto.so.3 libssl.so.3 
+/usr/bin/apk -> libcrypto.so.3 
+/usr/bin/aserver -> libasound.so.2 
+/usr/bin/sndfile-play -> libasound.so.2 
+/usr/lib/libapk.so.2.14.10 -> libcrypto.so.3 libssl.so.3 
+/usr/lib/libatopology.so.2.0.0 -> libasound.so.2 
+/usr/lib/libssl.so.3 -> libcrypto.so.3 
+
+## arm64: NEEDED entries of /usr/lib/libsndfile.so.1
+libm.so.6 libogg.so.0 libvorbisenc.so.2 libFLAC.so.14 libopus.so.0 libvorbis.so.0 libc.so.6 ld-linux-aarch64.so.1 
+
+## arm64: library bundled by the soundfile wheel
+none, so soundfile falls back to the system /usr/lib/libsndfile.so.1
+
+## amd64 runtime: shared libraries mapped by the running proxy after a soundfile write/read round trip
+soundfile process: libsndfile 1.2.0 from /app/.venv/lib/python3.13/site-packages/_soundfile_data/libsndfile_x86_64.so
+soundfile process maps libasound: False
+pid 1 [/app/.venv/bin/python3 /app/.venv/bin/litellm --po] maps: libcrypto.so.4 libsndfile_x86_64.so libssl.so.4 

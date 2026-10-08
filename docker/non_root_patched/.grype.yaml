@@ -1,0 +1,31 @@
+ignore:
+  - vulnerability: CVE-2025-15367
+    reason: "not_affected, vulnerable_code_not_in_execute_path: nothing in the image imports poplib; see litellm-non_root-v1.104.2.openvex.json"
+    package:
+      name: ^python-3\.13(-base)?$
+      version: 3.13.16_git20261002-r2
+      type: apk
+  - vulnerability: CVE-2026-12345
+    reason: "not_affected, vulnerable_code_cannot_be_controlled_by_adversary: TemporaryDirectory trees are mode 0700 and only uid 65534 runs in the container; see litellm-non_root-v1.104.2.openvex.json"
+    package:
+      name: ^python-3\.13(-base)?$
+      version: 3.13.16_git20261002-r2
+      type: apk
+  - vulnerability: CVE-2026-90781
+    reason: "not_affected, vulnerable_code_not_in_execute_path: arm64 only; libasound is linked only by sndfile-play, aserver, and libatopology, none of which run; see litellm-non_root-v1.104.2.openvex.json"
+    package:
+      name: ^alsa-lib$
+      version: 1.2.16.1-r2
+      type: apk
+  - vulnerability: CVE-2026-96674
+    reason: "not_affected, vulnerable_code_not_in_execute_path: arm64 only; libasound is linked only by sndfile-play, aserver, and libatopology, none of which run; see litellm-non_root-v1.104.2.openvex.json"
+    package:
+      name: ^alsa-lib$
+      version: 1.2.16.1-r2
+      type: apk
+  - vulnerability: CVE-2026-96675
+    reason: "not_affected, vulnerable_code_not_in_execute_path: arm64 only; libasound is linked only by sndfile-play, aserver, and libatopology, none of which run; see litellm-non_root-v1.104.2.openvex.json"
+    package:
+      name: ^alsa-lib$
+      version: 1.2.16.1-r2
+      type: apk

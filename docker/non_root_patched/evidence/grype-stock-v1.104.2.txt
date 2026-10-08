@@ -1,0 +1,78 @@
+$ grype litellm/litellm-non_root:v1.104.2
+ ✔ Loaded image                                                                     litellm/litellm-non_root:v1.104.2
+ ✔ Vulnerability DB                [updated]
+ ✔ Parsed image                               sha256:b7efea354c96065cd6907bcb8a48086e4609dafbf8858d6bc7a5adcbf6631862
+ ✔ Cataloged contents                                1eba594003c790405dbf2705080b6d4909c913acd777d420e4241627f5eb85a0
+   ├── ✔ Packages                        [255 packages]
+   ├── ✔ Executables                     [303 executables]
+   ├── ✔ File metadata                   [3,693 locations]
+   └── ✔ File digests                    [3,693 files]
+ ✔ Scanned for vulnerabilities     [63 vulnerability matches]
+   ├── by severity: 0 critical, 8 high, 27 medium, 12 low, 0 negligible (16 unknown)
+   └── by status:   32 fixed, 31 not-fixed, 0 ignored
+[0003]  WARN current database is invalid error=the vulnerability database was built 13 weeks ago (max allowed age is 5
+NAME                     INSTALLED               FIXED IN  TYPE  VULNERABILITY        SEVERITY  EPSS         RISK
+libcrypto3               3.6.4-r7                          apk   CVE-2026-54873       High      0.5% (38th)  0.3
+libssl3                  3.6.4-r7                          apk   CVE-2026-54873       High      0.5% (38th)  0.3
+libcrypto3               3.6.4-r7                          apk   CVE-2026-84782       High      0.4% (31st)  0.3
+libssl3                  3.6.4-r7                          apk   CVE-2026-84782       High      0.4% (31st)  0.3
+libcrypto3               3.6.4-r7                          apk   CVE-2026-84784       High      0.4% (32nd)  0.3
+libssl3                  3.6.4-r7                          apk   CVE-2026-84784       High      0.4% (32nd)  0.3
+python-3.13              3.13.16_git20261002-r2            apk   CVE-2025-15367       Medium    0.4% (28th)  0.2
+libcrypto3               3.6.4-r7                          apk   CVE-2026-72897       High      0.3% (16th)  0.2
+libssl3                  3.6.4-r7                          apk   CVE-2026-72897       High      0.3% (16th)  0.2
+libcrypto3               3.6.4-r7                          apk   CVE-2026-75806       Medium    0.4% (30th)  0.2
+libssl3                  3.6.4-r7                          apk   CVE-2026-75806       Medium    0.4% (30th)  0.2
+libcrypto3               3.6.4-r7                          apk   CVE-2026-75804       Medium    0.4% (26th)  0.2
+libssl3                  3.6.4-r7                          apk   CVE-2026-75804       Medium    0.4% (26th)  0.2
+glibc-2.44               2.44-r6                 2.44-r8   apk   CVE-2026-8674        Medium    0.3% (25th)  0.2
+glibc-2.44-locale-posix  2.44-r6                 2.44-r8   apk   CVE-2026-8674        Medium    0.3% (25th)  0.2
+ld-linux-2.44            2.44-r6                 2.44-r8   apk   CVE-2026-8674        Medium    0.3% (25th)  0.2
+libcrypt1-2.44           2.44-r6                 2.44-r8   apk   CVE-2026-8674        Medium    0.3% (25th)  0.2
+libcrypto3               3.6.4-r7                          apk   CVE-2026-42772       Medium    0.3% (24th)  0.2
+libssl3                  3.6.4-r7                          apk   CVE-2026-42772       Medium    0.3% (24th)  0.2
+libcrypto3               3.6.4-r7                          apk   CVE-2026-35189       Medium    0.3% (17th)  0.1
+libssl3                  3.6.4-r7                          apk   CVE-2026-35189       Medium    0.3% (17th)  0.1
+glibc-2.44               2.44-r6                 2.44-r8   apk   CVE-2026-89092       Medium    0.3% (16th)  0.1
+glibc-2.44-locale-posix  2.44-r6                 2.44-r8   apk   CVE-2026-89092       Medium    0.3% (16th)  0.1
+ld-linux-2.44            2.44-r6                 2.44-r8   apk   CVE-2026-89092       Medium    0.3% (16th)  0.1
+libcrypt1-2.44           2.44-r6                 2.44-r8   apk   CVE-2026-89092       Medium    0.3% (16th)  0.1
+libcrypto3               3.6.4-r7                          apk   CVE-2026-35191       Low       0.4% (27th)  0.1
+libssl3                  3.6.4-r7                          apk   CVE-2026-35191       Low       0.4% (27th)  0.1
+libcrypto3               3.6.4-r7                          apk   CVE-2026-75805       Medium    0.2% (11th)  0.1
+libssl3                  3.6.4-r7                          apk   CVE-2026-75805       Medium    0.2% (11th)  0.1
+libcrypto3               3.6.4-r7                          apk   CVE-2026-54875       Low       0.3% (20th)  < 0.1
+libssl3                  3.6.4-r7                          apk   CVE-2026-54875       Low       0.3% (20th)  < 0.1
+python-3.13              3.13.16_git20261002-r2            apk   CVE-2026-12345       Medium    0.2% (6th)   < 0.1
+libcrypto3               3.6.4-r7                          apk   CVE-2026-54872       Low       0.3% (16th)  < 0.1
+libssl3                  3.6.4-r7                          apk   CVE-2026-54872       Low       0.3% (16th)  < 0.1
+alsa-lib                 1.2.16.1-r2                       apk   CVE-2026-90781       Medium    0.2% (5th)   < 0.1
+libcrypto3               3.6.4-r7                          apk   CVE-2026-77696       Low       0.2% (14th)  < 0.1
+libssl3                  3.6.4-r7                          apk   CVE-2026-77696       Low       0.2% (14th)  < 0.1
+glibc-2.44               2.44-r6                 2.44-r8   apk   CVE-2026-86805       Medium    0.1% (1st)   < 0.1
+glibc-2.44-locale-posix  2.44-r6                 2.44-r8   apk   CVE-2026-86805       Medium    0.1% (1st)   < 0.1
+ld-linux-2.44            2.44-r6                 2.44-r8   apk   CVE-2026-86805       Medium    0.1% (1st)   < 0.1
+libcrypt1-2.44           2.44-r6                 2.44-r8   apk   CVE-2026-86805       Medium    0.1% (1st)   < 0.1
+alsa-lib                 1.2.16.1-r2                       apk   CVE-2026-96674       Medium    0.1% (1st)   < 0.1
+alsa-lib                 1.2.16.1-r2                       apk   CVE-2026-96675       Medium    0.1% (1st)   < 0.1
+glibc-2.44               2.44-r6                 2.44-r8   apk   CVE-2026-95818       Low       0.1% (2nd)   < 0.1
+glibc-2.44-locale-posix  2.44-r6                 2.44-r8   apk   CVE-2026-95818       Low       0.1% (2nd)   < 0.1
+ld-linux-2.44            2.44-r6                 2.44-r8   apk   CVE-2026-95818       Low       0.1% (2nd)   < 0.1
+libcrypt1-2.44           2.44-r6                 2.44-r8   apk   CVE-2026-95818       Low       0.1% (2nd)   < 0.1
+glibc-2.44               2.44-r6                 2.44-r8   apk   GHSA-fmf4-pr35-46c2  Unknown   N/A          N/A
+glibc-2.44               2.44-r6                 2.44-r8   apk   GHSA-gwqp-9qgw-c5pv  Unknown   N/A          N/A
+glibc-2.44               2.44-r6                 2.44-r8   apk   GHSA-h8x4-734c-9753  Unknown   N/A          N/A
+glibc-2.44               2.44-r6                 2.44-r8   apk   GHSA-qghr-qhfc-4hxp  Unknown   N/A          N/A
+glibc-2.44-locale-posix  2.44-r6                 2.44-r8   apk   GHSA-fmf4-pr35-46c2  Unknown   N/A          N/A
+glibc-2.44-locale-posix  2.44-r6                 2.44-r8   apk   GHSA-gwqp-9qgw-c5pv  Unknown   N/A          N/A
+glibc-2.44-locale-posix  2.44-r6                 2.44-r8   apk   GHSA-h8x4-734c-9753  Unknown   N/A          N/A
+glibc-2.44-locale-posix  2.44-r6                 2.44-r8   apk   GHSA-qghr-qhfc-4hxp  Unknown   N/A          N/A
+ld-linux-2.44            2.44-r6                 2.44-r8   apk   GHSA-fmf4-pr35-46c2  Unknown   N/A          N/A
+ld-linux-2.44            2.44-r6                 2.44-r8   apk   GHSA-gwqp-9qgw-c5pv  Unknown   N/A          N/A
+ld-linux-2.44            2.44-r6                 2.44-r8   apk   GHSA-h8x4-734c-9753  Unknown   N/A          N/A
+ld-linux-2.44            2.44-r6                 2.44-r8   apk   GHSA-qghr-qhfc-4hxp  Unknown   N/A          N/A
+libcrypt1-2.44           2.44-r6                 2.44-r8   apk   GHSA-fmf4-pr35-46c2  Unknown   N/A          N/A
+libcrypt1-2.44           2.44-r6                 2.44-r8   apk   GHSA-gwqp-9qgw-c5pv  Unknown   N/A          N/A
+libcrypt1-2.44           2.44-r6                 2.44-r8   apk   GHSA-h8x4-734c-9753  Unknown   N/A          N/A
+libcrypt1-2.44           2.44-r6                 2.44-r8   apk   GHSA-qghr-qhfc-4hxp  Unknown   N/A          N/A
+A newer version of grype is available for download: 0.120.1 (installed version is 0.115.0)

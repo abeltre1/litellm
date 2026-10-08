@@ -1,82 +1,101 @@
-# CVE status for litellm-non_root v1.104.2
+# CVE remediation for litellm-non_root v1.104.2
 
-This directory covers `litellm/litellm-non_root:v1.104.2`, the latest upstream release, pinned to index digest `sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027` (amd64 manifest `sha256:96f7723f804efd652aece0e64ff37e5fa26f6f4366c1ff083a5957dc732acd4f`, arm64 manifest `sha256:b1f2d6d3d1ba0c374cf4b9ee97d97d45a329a5f3bcb3f964751c090fb6570324`). It gives two ways to close out every finding: rebuild with the fixed packages, or accept the stock image with a machine-readable justification
+This directory addresses every finding in the grype scan of `litellm/litellm-non_root:v1.104.2` recorded in `evidence/grype-stock-v1.104.2.txt`: 63 matches across glibc, OpenSSL, Python, and alsa-lib. The patched image fixes 58 of them on amd64 by upgrading or removing packages. The remaining 2 on amd64 (5 on arm64) have no fix anywhere upstream and are justified in an OpenVEX document and matching grype ignore rules, each backed by evidence anyone can re-run
 
 | File | Purpose |
 | --- | --- |
-| `Dockerfile` | Patched image that upgrades glibc to the fixed release |
-| `scan.sh` | Builds the patched image with Podman, smoke tests it, and gates on Trivy and Grype |
-| `litellm-non_root-v1.104.2.openvex.json` | OpenVEX justification for every finding in the stock image |
-| `evidence/` | Trivy 0.75.0 reports for the stock image on both architectures, raw and with the VEX applied |
+| `Dockerfile` | Your Dockerfile, changed so the upgrade actually happens |
+| `scan.sh` | Builds the patched image with Podman, smoke tests it, and gates on grype and Trivy |
+| `litellm-non_root-v1.104.2.openvex.json` | OpenVEX justification for the findings that have no fix |
+| `.grype.yaml` | grype ignore rules mirroring the OpenVEX statements |
+| `evidence/` | The baseline grype run, Trivy reports for the stock image, and linkage and runtime evidence |
 
-## Findings in the stock image
+## Why the original Dockerfile changed nothing
 
-Trivy 0.75.0 (vulnerability DB pulled 2026-10-08) reports no critical, high, or low findings on either architecture. It inventoried 52 OS packages, 199 Python packages, and 4 Node packages, and the only findings are four medium glibc CVEs, each reported once per glibc subpackage (`glibc-2.44`, `glibc-2.44-locale-posix`, `ld-linux-2.44`, `libcrypt1-2.44`), for 16 rows in total. Every one is fixed in `2.44-r8`; the image ships `2.44-r6`
-
-| CVE | Vendor CVSS | Issue | Fixed in | VEX status |
-| --- | --- | --- | --- | --- |
-| CVE-2026-86805 | 7.0 | ld.so TOCTOU on `$ORIGIN` for setuid/setgid programs | 2.44-r8 | not_affected, vulnerable_code_not_in_execute_path |
-| CVE-2026-95818 | 7.0 | ld.so stack overflow on `$ORIGIN` for setuid/setgid programs | 2.44-r8 | not_affected, vulnerable_code_not_in_execute_path |
-| CVE-2026-8674 | 5.3 | Resolver abort on an overlong search domain in resolv.conf or LOCALDOMAIN | 2.44-r8 | not_affected, vulnerable_code_cannot_be_controlled_by_adversary |
-| CVE-2026-89092 | 4.2 | nscd stack overflow on oversized DNS responses | 2.44-r8 | not_affected, vulnerable_code_not_present |
-
-## Remediation: patched image
-
-`Dockerfile` starts from the digest-pinned stock image and installs `>=2.44-r8` of the four glibc subpackages from the public Wolfi repository, then drops back to uid 65534. Nothing else in the image changes
-
-A plain `apk upgrade` on top of the stock image does nothing, for two reasons. The image's only configured repository is `https://apk.cgr.dev/chainguard`, which requires Chainguard credentials, and `/etc/apk/world` pins every glibc subpackage to `=2.44-r6`, so apk will not move them even with repository access. The Dockerfile names the Wolfi repository for this one install (the image already trusts `wolfi-signing.rsa.pub`) and replaces the exact pins with `>=2.44-r8` constraints. If the fixed packages cannot be fetched, the build fails rather than producing an unpatched image
-
-If your network mirrors Wolfi internally, point the build at the mirror with `--build-arg APK_REPOSITORY=https://your-mirror/os`. For a multi-arch image use `podman build --platform linux/amd64,linux/arm64 --manifest localhost/litellm-non_root:v1.104.2-patched .`, which needs `qemu-user-static` on the host for the foreign architecture
-
-Run `./scan.sh` with Podman (rootless is fine) on a machine with registry access. It builds the image, prints the installed glibc versions, starts the proxy with networking disabled and waits for `/health/liveliness`, then fails unless the patched image has zero findings under both Trivy 0.75.0 and Grype v0.120.1 and the stock image has zero unjustified findings under Trivy with the VEX applied. Both scanners are pinned by digest and run as containers, so nothing needs installing and no Podman socket is needed: the scanners pull the stock image straight from the registry by digest, and the patched image is exported with `podman save` to `reports/patched.docker-archive.tar` (about 2 GB, git-ignored and excluded from the build context). Scanner containers run with `--security-opt label=disable` so they can read the mounted directory on SELinux hosts. Reports land in `reports/`
-
-## Justification: OpenVEX
-
-If you deploy the stock image instead, `litellm-non_root-v1.104.2.openvex.json` states why none of the four CVEs is exploitable in it. The products are the index digest and both per-arch manifest digests, so it matches however the image is referenced, and it applies to nothing else. Each claim rests on a property of the image that anyone can re-check
-
-The two ld.so CVEs (86805 and 95818) are only reachable when the loader runs a program with AT_SECURE set, which happens for setuid, setgid, or file-capability binaries. The image contains none on either architecture, and the container runs as uid 65534
+The original Dockerfile built successfully, but the image it produced has exactly the same 52 packages as the stock image. Building it with Podman shows why
 
 ```
-podman run --rm --user 0 --network none --entrypoint sh \
-  docker.io/litellm/litellm-non_root@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027 \
-  -c 'find / -xdev \( -perm -4000 -o -perm -2000 \) -type f | wc -l'
-0
+fetch https://apk.cgr.dev/chainguard/x86_64/APKINDEX.tar.gz
+WARNING: ignoring authenticated repository https://apk.cgr.dev/chainguard: no HTTP_AUTH provided
+OK: 212 MiB in 52 packages
 ```
 
-CVE-2026-89092 lives in the nscd daemon, which is not installed: there is no binary, no `/etc/nscd.conf`, and no socket
+The image's only apk repository is Chainguard's, which requires credentials, so apk skips it and still exits 0. Even with access, `/etc/apk/world` pins 14 packages to exact versions, including all four glibc packages and `libcrypto3`/`libssl3`, so `apk upgrade` would not have moved the vulnerable packages
+
+## What the Dockerfile does now
+
+It keeps your `FROM`, CA build arguments, and `USER nobody`, and makes three changes in one step
+
+1. It removes `libsndfile` when the `soundfile` Python wheel bundles its own copy of the library, which is the case on amd64. Nothing in the proxy uses the system package there, and removing it also removes `alsa-lib`, `libflac`, `libogg`, `libopus`, and `libvorbis`. On arm64 the wheel bundles nothing and falls back to the system library, so it is kept
+2. It removes the exact version pins from `/etc/apk/world`
+3. It runs `apk upgrade` against the public Wolfi repository (`APK_REPOSITORY`, default `https://packages.wolfi.dev/os`), with your CA bundle as `SSL_CERT_FILE`. apk does honor `SSL_CERT_FILE`; this was checked through a TLS-intercepting proxy
+
+If Wolfi cannot be reached, the build fails with `ERROR: Not continuing due to stale/unavailable repositories` (exit 99) instead of producing an unpatched image. If you mirror Wolfi internally, pass `--build-arg APK_REPOSITORY=https://your-mirror/os`
+
+## Disposition of every finding
+
+| Rows | Package | Vulnerabilities | Disposition |
+| --- | --- | --- | --- |
+| 32 | glibc-2.44, glibc-2.44-locale-posix, ld-linux-2.44, libcrypt1-2.44 | CVE-2026-8674, CVE-2026-86805, CVE-2026-89092, CVE-2026-95818, plus GHSA-fmf4-pr35-46c2, GHSA-gwqp-9qgw-c5pv, GHSA-h8x4-734c-9753, GHSA-qghr-qhfc-4hxp | Fixed: upgraded to 2.44-r8 |
+| 26 | libcrypto3, libssl3 | CVE-2026-84782, CVE-2026-35189, CVE-2026-35191, CVE-2026-42772, CVE-2026-54872, CVE-2026-54873, CVE-2026-54875, CVE-2026-72897, CVE-2026-75804, CVE-2026-75805, CVE-2026-75806, CVE-2026-77696, CVE-2026-84784 | Fixed: upgraded to OpenSSL 3.6.5 |
+| 3 | alsa-lib | CVE-2026-90781, CVE-2026-96674, CVE-2026-96675 | amd64: removed. arm64: not_affected, vulnerable_code_not_in_execute_path |
+| 1 | python-3.13 | CVE-2025-15367 | not_affected, vulnerable_code_not_in_execute_path |
+| 1 | python-3.13 | CVE-2026-12345 | not_affected, vulnerable_code_cannot_be_controlled_by_adversary |
+
+## Evidence
+
+### OpenSSL
+
+OpenSSL's own changelog for 3.6.5 (released 29 Sep 2026, tag `openssl-3.6.5`, commit `c8bd5a57`) lists all 13 CVEs as fixed. Wolfi currently ships `openssl` 3.6.5-r1. grype showed no fixed version only because its database was built before that release. OpenSSL rates CVE-2026-84782 (DTLS retransmission heap disclosure) High and the other 12 Low; grype's four High ratings come from a different severity source
+
+These had to be fixed rather than justified. Package metadata says only `apk-tools` depends on `libcrypto3`/`libssl3`, but Prisma's query and schema engines, which are not apk packages, link `libssl.so.3` and `libcrypto.so.3` directly (see `evidence/linkage-and-runtime.txt`). The query engine is how LiteLLM talks to its database, so OpenSSL 3.6 is on a live TLS path
+
+### glibc
+
+Both the Wolfi and Chainguard advisory feeds record all four CVEs as fixed in `2.44-r8`, and Wolfi currently ships glibc-2.44 at epoch 8. The baseline grype run reports the four GHSA advisories against the same four packages with the same fixed version, `2.44-r8`, so the upgrade clears them too. Whether they are aliases of the four CVEs was not established, since none of the advisory data available while preparing this lists them
+
+### alsa-lib
+
+On both architectures, only three files link `libasound.so.2`: `/usr/bin/sndfile-play`, `/usr/bin/aserver`, and `/usr/lib/libatopology.so`. `libsndfile.so.1` itself links only libm, the ogg/vorbis/FLAC/opus codec libraries, and libc. In a running proxy on amd64, after a `soundfile` write and read round trip, no process maps `libasound`, and `soundfile` loads the library bundled in its wheel rather than the system one. That is why removing the system package on amd64 is safe; the smoke test in `scan.sh` re-checks the round trip on every build. All three CVEs affect alsa-lib "through 1.2.16.1" and no fixed release exists
+
+### Python
+
+The image's Python is a snapshot of CPython's 3.13 branch at commit `15e701a` (2026-10-01), which is the current head of that branch, so no newer 3.13 build exists to upgrade to. The installed `poplib.py` and `tempfile.py` do not contain fixes for these two CVEs
+
+CVE-2025-15367 is a newline injection in `poplib` that requires an application to pass user-controlled strings as POP3 commands. No module in the image's virtual environment imports `poplib`
+
+CVE-2026-12345 is a race in `TemporaryDirectory` cleanup that requires an attacker who can modify the directory tree while it is being removed. Those directories are created by `mkdtemp` with mode 0700 and owned by the process user, so only uid 65534 or root can change them, and the container runs a single workload as uid 65534. LiteLLM's own uses (`litellm/llms/sap/credentials.py` and the skills sandbox executor) stage files the proxy writes itself; skill code runs in a separate sandbox container and cannot reach the proxy's temporary directories
+
+### Conditions the justifications depend on
+
+Keep running the proxy as the only workload in the container under uid 65534, do not share its temporary directory with other users or containers, and do not run untrusted code inside the proxy's container. If any of that changes, revisit the CVE-2026-12345 statement
+
+## Running it
 
 ```
-podman run --rm --user 0 --network none --entrypoint sh \
-  docker.io/litellm/litellm-non_root@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027 \
-  -c 'find / -xdev -name "nscd*" | wc -l'
-0
+CA_BUNDLE=/path/to/your/ca-bundle.pem ./scan.sh
 ```
 
-CVE-2026-8674 is triggered by the content of `/etc/resolv.conf` or the `LOCALDOMAIN` environment variable. The image does not set `LOCALDOMAIN`, and `resolv.conf` is bind-mounted by the container runtime from the platform's DNS configuration, so only the operator controls it. API callers and network peers cannot. The worst case under operator misconfiguration is a process abort
+`CA_BUNDLE` is optional. When set it is mounted at `/ca-bundle.pem` for the build, as your Dockerfile expects, and given to the scanner containers so they can download their databases through a TLS-intercepting proxy. Without it the build uses the image's own CA bundle. The build needs to reach `packages.wolfi.dev` (or your mirror) and the scanners need their database hosts
 
-```
-podman run --rm --entrypoint sh docker.io/litellm/litellm-non_root@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027 \
-  -c 'grep " /etc/resolv.conf " /proc/mounts'
-/dev/vda /etc/resolv.conf ext4 rw,relatime,... 0 0
-```
+The script builds the image, prints the installed versions of every package the scan flagged, starts the proxy with networking disabled and waits for `/health/liveliness`, round-trips audio through `soundfile`, then exports the image with `podman save` and scans it. It fails unless grype v0.120.1 with a freshly updated database reports zero findings beyond the justified ones, at any severity including Unknown, and Trivy 0.75.0 does the same. Both scanners are pinned by digest and run in containers, so nothing needs to be installed and no Podman socket is needed. Reports land in `reports/`, which is git-ignored and excluded from the build context because the export is about 2 GB
 
-These claims hold as long as the deployment keeps the conditions they depend on. Do not mount volumes containing setuid binaries into the container (mount them `nosuid`, and set `allowPrivilegeEscalation: false` and `runAsNonRoot: true` in Kubernetes), do not add or enable nscd, and do not set `LOCALDOMAIN` or the pod's DNS search domains from untrusted input
+For a multi-arch image use `podman build --platform linux/amd64,linux/arm64 --manifest localhost/litellm-non_root:v1.104.2-patched .` (needs `qemu-user-static` for the foreign architecture)
 
-Apply the VEX with either scanner
+## Notes on the scanners
 
-```
-trivy image --vex litellm-non_root-v1.104.2.openvex.json --show-suppressed --exit-code 1 docker.io/litellm/litellm-non_root@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027
-grype registry:docker.io/litellm/litellm-non_root@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027 --vex litellm-non_root-v1.104.2.openvex.json --show-suppressed
-```
+The baseline grype run used grype 0.115.0 with a database it reported as 13 weeks old, which is why OpenSSL and alsa-lib showed no fixed version. `scan.sh` updates the database and uses the current grype release
 
-With Trivy this reports 0 findings on amd64 and arm64 and lists all 16 as suppressed with their justifications; the output is in `evidence/trivy-stock-vex-amd64.txt` and `evidence/trivy-stock-vex-arm64.txt`
+grype's `--fail-on` ranks Unknown below Negligible, so `--fail-on negligible` would let the 16 Unknown-severity rows through. The gate in `scan.sh` counts every match in the JSON report instead
 
-The VEX names the image by digest, so the scanner has to know the digest. Scanning from the registry or from local Podman storage (where `podman image inspect` lists the digests under `RepoDigests`) works. Scanning a `podman save` archive does not, because the archive does not carry the registry digest and all 16 findings show as active. That is deliberate: matching on the glibc package alone would claim every image with this glibc is unaffected, while the evidence above only holds for these digests
+The VEX and the ignore rules name packages and exact versions, not image digests, because a locally built image has no registry digest for a scanner to match. If Wolfi ships a newer Python or alsa-lib, the rules stop matching and the findings reappear, which is intended: the new version needs its own review
+
+Trivy does not report the OpenSSL, Python, or alsa-lib findings at all, only the glibc ones, so grype is the stricter gate here
+
+Neither scanner sees the libsndfile 1.2.0 bundled inside the `soundfile` wheel, which is the copy that parses user-uploaded audio for NVIDIA Riva transcriptions on amd64. CVE-2024-50612 is recorded against libsndfile "through 1.2.2" and is in the Vorbis encoding path, which LiteLLM does not use when reading audio. libsndfile's changelog does not name CVEs, so whether CVE-2022-33064 and CVE-2022-33065 affect 1.2.0 was not established. This is outside the grype findings but worth a decision
 
 ## What was and was not verified
 
-The following were run on 2026-10-08: the stock image scans, the in-image evidence on amd64 (by running it) and arm64 (from its exported filesystem), the Trivy VEX gate on both architectures, the offline liveness check on the stock image, and the evidence commands above. `scan.sh` was also run under Podman 4.9.3. The build parsed under Buildah and stopped at the `apk add` step as designed, because the egress policy of the environment where this was prepared blocks `packages.wolfi.dev`. Every later step was then exercised with the stock image standing in for the patched one. The smoke test passed, the `podman save` export scanned with all 199 Python packages detected, and the zero-findings gate correctly failed on the stand-in's 16 glibc findings. The VEX gate against the registry passed
+Run on 2026-10-08 with Podman 4.9.3. The original Dockerfile was built and its package set diffed against the stock image. The new Dockerfile was built: the `libsndfile` removal ran, the pins were removed, and the upgrade step failed closed because the build environment's egress policy blocks `packages.wolfi.dev`. A stand-in image without the upgrade passed the liveness and `soundfile` smoke test after the removal, its archive scanned under Trivy with the VEX accepted, and the Trivy gate correctly failed on the stand-in's unpatched glibc. The `.grype.yaml` rules were loaded and validated by grype v0.120.1. The linkage evidence was gathered on both architectures and the runtime evidence on amd64
 
-Two things were not run there. The patched image itself was never built, and Grype was never run, because `grype.anchore.io` is also blocked. Run `scan.sh` before relying on the patched image
-
-Vulnerability databases change daily, so new findings can appear against the same digest. Re-run `scan.sh` on a schedule, and re-review the VEX whenever the base digest changes
+Not verified there: the upgraded packages themselves and any grype scan, because `packages.wolfi.dev` and grype's database host are blocked in that environment. Run `scan.sh` before relying on the image

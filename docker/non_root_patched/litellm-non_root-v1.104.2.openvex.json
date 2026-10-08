@@ -1,259 +1,87 @@
 {
   "@context": "https://openvex.dev/ns/v0.2.0",
-  "@id": "urn:uuid:7198d143-b96d-44a5-9049-17415cca1fe6",
+  "@id": "urn:uuid:52818ab1-eced-43ea-8e53-08f0f78d2695",
   "author": "abeltre1",
   "role": "Deployer security review",
-  "timestamp": "2026-10-08T19:45:00Z",
+  "timestamp": "2026-10-08T21:00:00Z",
   "version": 1,
-  "tooling": "Evidence gathered with trivy 0.75.0 (aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa) and in-image inspection; see README.md",
+  "tooling": "Patched image built from Dockerfile in this directory; evidence gathered by image inspection, ELF linkage analysis, and runtime library mapping; see README.md",
   "statements": [
     {
       "vulnerability": {
-        "name": "CVE-2026-86805",
-        "description": "glibc ld.so TOCTOU when expanding $ORIGIN in DT_RPATH for setuid/setgid (AT_SECURE) programs"
+        "name": "CVE-2025-15367",
+        "description": "cpython poplib command injection via newlines in user-controlled POP3 commands"
       },
       "products": [
         {
-          "@id": "pkg:oci/litellm-non_root@sha256%3Ae8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
-          "subcomponents": [
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
-            }
-          ]
+          "@id": "pkg:apk/wolfi/python-3.13@3.13.16_git20261002-r2"
         },
         {
-          "@id": "pkg:oci/litellm-non_root@sha256%3A96f7723f804efd652aece0e64ff37e5fa26f6f4366c1ff083a5957dc732acd4f?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
-          "subcomponents": [
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
-            }
-          ]
-        },
-        {
-          "@id": "pkg:oci/litellm-non_root@sha256%3Ab1f2d6d3d1ba0c374cf4b9ee97d97d45a329a5f3bcb3f964751c090fb6570324?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
-          "subcomponents": [
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
-            }
-          ]
+          "@id": "pkg:apk/wolfi/python-3.13-base@3.13.16_git20261002-r2"
         }
       ],
       "status": "not_affected",
       "justification": "vulnerable_code_not_in_execute_path",
-      "impact_statement": "The flaw is only reachable when ld.so loads a program with AT_SECURE set, which happens for setuid/setgid or file-capability binaries. The image contains zero setuid, setgid, or file-capability binaries on both amd64 and arm64, and the container runs as uid 65534, so no AT_SECURE exec can occur from image content. Exploitation additionally requires fs.protected_hardlinks to be disabled on the host"
+      "impact_statement": "The flaw is in the poplib module and is only reachable when an application passes user-controlled strings to POP3 commands. No module in the image's virtual environment imports poplib, and LiteLLM does not speak POP3, so the vulnerable code is never executed. No fixed CPython release exists; the image's Python is the current head of the 3.13 branch (commit 15e701a)"
     },
     {
       "vulnerability": {
-        "name": "CVE-2026-95818",
-        "description": "glibc ld.so stack buffer overflow for setuid/setgid (AT_SECURE) programs whose DT_RPATH/DT_RUNPATH begins with $ORIGIN"
+        "name": "CVE-2026-12345",
+        "description": "cpython tempfile.TemporaryDirectory cleanup race allowing deletion outside the directory via symlink swap"
       },
       "products": [
         {
-          "@id": "pkg:oci/litellm-non_root@sha256%3Ae8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
-          "subcomponents": [
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
-            }
-          ]
+          "@id": "pkg:apk/wolfi/python-3.13@3.13.16_git20261002-r2"
         },
         {
-          "@id": "pkg:oci/litellm-non_root@sha256%3A96f7723f804efd652aece0e64ff37e5fa26f6f4366c1ff083a5957dc732acd4f?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
-          "subcomponents": [
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
-            }
-          ]
-        },
-        {
-          "@id": "pkg:oci/litellm-non_root@sha256%3Ab1f2d6d3d1ba0c374cf4b9ee97d97d45a329a5f3bcb3f964751c090fb6570324?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
-          "subcomponents": [
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
-            }
-          ]
-        }
-      ],
-      "status": "not_affected",
-      "justification": "vulnerable_code_not_in_execute_path",
-      "impact_statement": "The overflow is only reachable when ld.so processes $ORIGIN for an AT_SECURE (setuid, setgid, or file-capability) program. The image contains zero such binaries on both amd64 and arm64 and runs as uid 65534, so the vulnerable loader path is never executed for image content"
-    },
-    {
-      "vulnerability": {
-        "name": "CVE-2026-89092",
-        "description": "glibc nscd stack overflow on oversized DNS responses"
-      },
-      "products": [
-        {
-          "@id": "pkg:oci/litellm-non_root@sha256%3Ae8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
-          "subcomponents": [
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
-            }
-          ]
-        },
-        {
-          "@id": "pkg:oci/litellm-non_root@sha256%3A96f7723f804efd652aece0e64ff37e5fa26f6f4366c1ff083a5957dc732acd4f?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
-          "subcomponents": [
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
-            }
-          ]
-        },
-        {
-          "@id": "pkg:oci/litellm-non_root@sha256%3Ab1f2d6d3d1ba0c374cf4b9ee97d97d45a329a5f3bcb3f964751c090fb6570324?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
-          "subcomponents": [
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
-            }
-          ]
-        }
-      ],
-      "status": "not_affected",
-      "justification": "vulnerable_code_not_present",
-      "impact_statement": "The vulnerable code is in the nscd daemon. nscd is not installed in the image on either amd64 or arm64: there is no nscd binary, no /etc/nscd.conf, and no nscd socket, so the vulnerable component cannot run"
-    },
-    {
-      "vulnerability": {
-        "name": "CVE-2026-8674",
-        "description": "glibc DNS stub resolver assertion failure (process abort) from an overlong search domain in /etc/resolv.conf or LOCALDOMAIN"
-      },
-      "products": [
-        {
-          "@id": "pkg:oci/litellm-non_root@sha256%3Ae8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
-          "subcomponents": [
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
-            }
-          ]
-        },
-        {
-          "@id": "pkg:oci/litellm-non_root@sha256%3A96f7723f804efd652aece0e64ff37e5fa26f6f4366c1ff083a5957dc732acd4f?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
-          "subcomponents": [
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
-            }
-          ]
-        },
-        {
-          "@id": "pkg:oci/litellm-non_root@sha256%3Ab1f2d6d3d1ba0c374cf4b9ee97d97d45a329a5f3bcb3f964751c090fb6570324?repository_url=index.docker.io%2Flitellm%2Flitellm-non_root",
-          "subcomponents": [
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/glibc-2.44-locale-posix@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/ld-linux-2.44@2.44-r6"
-            },
-            {
-              "@id": "pkg:apk/wolfi/libcrypt1-2.44@2.44-r6"
-            }
-          ]
+          "@id": "pkg:apk/wolfi/python-3.13-base@3.13.16_git20261002-r2"
         }
       ],
       "status": "not_affected",
       "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
-      "impact_statement": "The trigger is the search list in /etc/resolv.conf or the LOCALDOMAIN environment variable. The image does not set LOCALDOMAIN, and /etc/resolv.conf is bind-mounted by the container runtime at start from the platform's DNS configuration, so only the platform operator controls it. Neither LLM API callers nor network peers can influence it. The worst-case impact under operator misconfiguration is a process abort (availability only)"
+      "impact_statement": "Exploitation requires an attacker who can modify the temporary directory tree while it is being removed. TemporaryDirectory creates its directory with mkdtemp, mode 0700, owned by the process user, so only that user (uid 65534) or root can change it. The container runs a single workload as uid 65534 and does not share its temporary directory with other users. LiteLLM's own uses stage files the proxy itself writes; skill code runs in a separate sandbox container and cannot reach the proxy's temporary directories. No fixed CPython release exists"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2026-90781",
+        "description": "alsa-lib off-by-one stack overflow in __snd_ctl_ascii_elem_id_parse"
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/wolfi/alsa-lib@1.2.16.1-r2"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "alsa-lib remains only in the arm64 image, where the system libsndfile must stay because the soundfile wheel for arm64 does not bundle its own copy; on amd64 the Dockerfile removes libsndfile and alsa-lib with it. libasound.so.2 is linked only by /usr/bin/sndfile-play, /usr/bin/aserver, and /usr/lib/libatopology.so, none of which the proxy executes or loads. libsndfile.so.1, the library soundfile loads on arm64, links only libm, libogg, libvorbis, libvorbisenc, libFLAC, libopus, libc, and the loader, so audio handling never loads alsa-lib"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2026-96674",
+        "description": "alsa-lib topology integer overflow from crafted topology files"
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/wolfi/alsa-lib@1.2.16.1-r2"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "alsa-lib remains only in the arm64 image, where the system libsndfile must stay because the soundfile wheel for arm64 does not bundle its own copy; on amd64 the Dockerfile removes libsndfile and alsa-lib with it. libasound.so.2 is linked only by /usr/bin/sndfile-play, /usr/bin/aserver, and /usr/lib/libatopology.so, none of which the proxy executes or loads. libsndfile.so.1, the library soundfile loads on arm64, links only libm, libogg, libvorbis, libvorbisenc, libFLAC, libopus, libc, and the loader, so audio handling never loads alsa-lib"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2026-96675",
+        "description": "alsa-lib multi PCM plugin out-of-bounds read from a malicious ALSA configuration file"
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/wolfi/alsa-lib@1.2.16.1-r2"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "alsa-lib remains only in the arm64 image, where the system libsndfile must stay because the soundfile wheel for arm64 does not bundle its own copy; on amd64 the Dockerfile removes libsndfile and alsa-lib with it. libasound.so.2 is linked only by /usr/bin/sndfile-play, /usr/bin/aserver, and /usr/lib/libatopology.so, none of which the proxy executes or loads. libsndfile.so.1, the library soundfile loads on arm64, links only libm, libogg, libvorbis, libvorbisenc, libFLAC, libopus, libc, and the loader, so audio handling never loads alsa-lib"
     }
   ]
 }
